@@ -59,7 +59,7 @@ def parse_cpt_input(lines):
   for line in lines:
     stage_match = re.match(r'Stage (\d+): (\d+:\d+) - (\d+:\d+)', line)
 
-    if stage_match is not None:
+    if (stage_match := re.match(r'Stage (\d+): (\d+:\d+) - (\d+:\d+)', line)) is not None:
       stage = int(stage_match[1])
       start_time = dt.combine(last_date, parse(stage_match[2]).time())
       end_time = dt.combine(last_date, parse(stage_match[3]).time())      
@@ -67,13 +67,18 @@ def parse_cpt_input(lines):
       if end_time <= start_time:
         end_time += timedelta(1)
       
-    else:      
-      stage_match = re.match(r'Stage (\d+): (\d+:\d+) until further notice', line)
+    elif (stage_match := re.match(r'Stage (\d+): (\d+:\d+) until further notice', line)) is not None:
+      stage = int(stage_match[1])
+      start_time = dt.combine(last_date, parse(stage_match[2]).time())
+      end_time = start_time + timedelta(3)
       
-      if stage_match is not None:
-        stage = int(stage_match[1])
-        start_time = dt.combine(last_date, parse(stage_match[2]).time())
-        end_time = start_time + timedelta(3)
+    elif (stage_match := re.match(r'Stage (\d+): under way until (\d+:\d+)', line)) is not None:
+      stage = int(stage_match[1])
+      start_time = dt.now()
+      end_time = dt.combine(last_date, parse(stage_match[2]).time())
+
+      if end_time <= start_time:
+        end_time += timedelta(1)
 
     date_match = re.match(r'([0-9]+) (\w+)', line)
 
