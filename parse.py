@@ -58,15 +58,30 @@ def parse_cpt_input(lines):
   stages = []
   for line in lines:
     stage_match = re.match(r'Stage (\d+): (\d+:\d+) - (\d+:\d+)', line)
+
+    if stage_match is not None:
+      stage = int(stage_match[1])
+      start_time = dt.combine(last_date, parse(stage_match[2]).time())
+      end_time = dt.combine(last_date, parse(stage_match[3]).time())      
+
+      if end_time <= start_time:
+        end_time += timedelta(1)
+      
+    else:      
+      stage_match = re.match(r'Stage (\d+): (\d+:\d+) until further notice', line)
+      
+      if stage_match is not None:
+        stage = int(stage_match[1])
+        start_time = dt.combine(last_date, parse(stage_match[2]).time())
+        end_time = start_time + timedelta(3)
+
     date_match = re.match(r'([0-9]+) (\w+)', line)
 
     if stage_match is not None:
-      start_time = dt.combine(last_date, parse(stage_match[2]).time())
-      end_time = dt.combine(last_date, parse(stage_match[3]).time())
-      if end_time <= start_time:
-        end_time += timedelta(1)
+      # start_time = dt.combine(last_date, parse(stage_match[2]).time())
+      # end_time = dt.combine(last_date, parse(stage_match[3]).time())
       stages.append({
-        "stage": int(stage_match[1]), 
+        "stage": stage, 
         "start": start_time.isoformat(), 
         "end": end_time.isoformat()
         })
